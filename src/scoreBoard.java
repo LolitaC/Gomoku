@@ -27,7 +27,6 @@ public class scoreBoard extends JPanel{
 	}
 	
 	public void paint(Graphics g){
-		System.out.println("用户计分板----用户图标读取中");
 		g.drawImage(image, 0, 0, this.getWidth(), this.getHeight(), null);
 	}
 }

@@ -4,7 +4,7 @@ import chessboard.ChessBoard;
 
 public abstract class User {
 	
-    UserType userType = UserType.LOCAL_HUMAN;
+    UserType userType;;
     ChessBoard chessBoard;
     
     public User(ChessBoard chessBoard) {

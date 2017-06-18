@@ -21,8 +21,11 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import chessboard.Chess;
 import chessboard.ChessBoard;
 import chessboard.stdChessBoard;
+import user.Computer;
+import user.User;
 
 public class Gomoku extends JFrame{
 
@@ -32,6 +35,7 @@ public class Gomoku extends JFrame{
 	ChessBoard chessBoard;//棋盘
 	scoreBoard user1; //用户一的计分板
 	scoreBoard user2; //用户二的计分板
+	Computer computer;
 	
 	final private int MARGIN = 1;//控件之间的距离
 	
@@ -103,6 +107,7 @@ public class Gomoku extends JFrame{
 		
 		JPanel mainPart = new JPanel();//棋盘和 功能区
 		chessBoard = new stdChessBoard();//----------------------棋盘
+		computer = new Computer(chessBoard);
 		mainPart.setLayout(new BorderLayout());
 		mainPart.add("South", new JLabel("功能区部分"));
 		mainPart.add("Center", chessBoard);
@@ -144,7 +149,7 @@ public class Gomoku extends JFrame{
 			
 			switch (menuItemNum) {
 			case 1 : newGame(); break;
-			case 2 : break;
+			case 2 : System.out.println(computer.Evaluate(chessBoard.getGrid(), Chess.BLACK));break;
 			default : break;
 			}
 			

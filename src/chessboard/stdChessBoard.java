@@ -38,7 +38,7 @@ public class stdChessBoard extends ChessBoard {
 	public stdChessBoard() {
 		// TODO Auto-generated constructor stub
 		init();
-
+		
 	}
 	
 	private void init(){
@@ -255,8 +255,7 @@ public class stdChessBoard extends ChessBoard {
 				else
 					JOptionPane.showMessageDialog(null, "黑棋获胜", "游戏结束", JOptionPane.WARNING_MESSAGE);
 				
-				init_game();
-				repaint();
+				//init_game();
 				return;
 			}
 			//没有五子连棋，改变当前下棋方
@@ -394,5 +393,22 @@ public class stdChessBoard extends ChessBoard {
 	
 	public void newGame(){
 		init_game();
+	}
+
+	@Override
+	public int getRowsCount() {
+		// TODO Auto-generated method stub
+		return ROWS;
+	}
+
+	@Override
+	public int getColumnCount() {
+		// TODO Auto-generated method stub
+		return COLMNS;
+	}
+	
+	public int[][] getGrid()
+	{
+		return grid.clone();
 	}
 }
