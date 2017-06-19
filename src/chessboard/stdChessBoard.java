@@ -3,16 +3,24 @@ package chessboard;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Stack;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
+
+
+
+
+
+
 
 public class stdChessBoard extends ChessBoard {
 	
@@ -21,7 +29,10 @@ public class stdChessBoard extends ChessBoard {
 	 */
 	private static final long serialVersionUID = 1L;
 	
+	
+	
 	Image image;
+	private Boolean isFinish = Boolean.FALSE;//是否结束游戏
 	final private int ROWS = 15;  //行数
 	final private int COLMNS = 15; //列数
 	private int[][] grid; //网格数组    0--无棋子      1--黑棋子       2--白棋子
@@ -34,6 +45,10 @@ public class stdChessBoard extends ChessBoard {
 	final private int WHITE = 2; //白棋
 	final private int BLACK = 1; //黑棋
 	private int current;//当前棋子
+	
+
+	
+	Stack<Point> result = new Stack<Point>(); //记录每次放置的棋子，可用于回滚操作
 	
 	public stdChessBoard() {
 		// TODO Auto-generated constructor stub
@@ -61,10 +76,13 @@ public class stdChessBoard extends ChessBoard {
 		
 		init_game();
 		
+
+		
 	}
 	
 	public void paint(Graphics g)
 	{
+		
 		//棋盘
 		g.drawImage(image, 0, 0, this.getWidth(), this.getHeight(), null);
 		
@@ -150,7 +168,6 @@ public class stdChessBoard extends ChessBoard {
 				
 			}
 		}
-
 	}
 
 	@Override
@@ -158,6 +175,11 @@ public class stdChessBoard extends ChessBoard {
 		// TODO Auto-generated method stub
 		//System.out.println(e.getX());
 		//System.out.println(e.getY());
+		if(current == WHITE)
+			return ;
+		
+		if(isFinish)//游戏已经结束
+			return;
 		
 		if(e.getButton() != MouseEvent.BUTTON1) //点击的不是鼠标左键
 			return;
@@ -243,17 +265,47 @@ public class stdChessBoard extends ChessBoard {
 		//System.out.println(j);
 		
 		if(grid[i][j] == 0){
+			//放置棋子
 			grid[i][j] = current;
+			
+			repaint();
+			//存入记录
+			result.push(new Point(i, j));
+			//所有格子放满了，平局
+			if(result.size() == ROWS*COLMNS)
+			{
+				JOptionPane.showMessageDialog(null, "平局", "游戏结束", JOptionPane.WARNING_MESSAGE);	
+				
+				isFinish = Boolean.TRUE;
+				userBlack.tier();
+				userWhite.tier();
+				userBlack.update();
+				userWhite.update();
+				
+				current = current == WHITE ? BLACK:WHITE;
+				return ;
+			}
+				
 			//判断是否有五子连棋
 			//...
 			if (isWinner(i, j)) {
 				
-				repaint();
+				
 				if (current == WHITE) {
 					JOptionPane.showMessageDialog(null, "白棋获胜", "游戏结束", JOptionPane.WARNING_MESSAGE);
+					userWhite.winner();
+					userBlack.loser();
 				}
-				else
+				else{
 					JOptionPane.showMessageDialog(null, "黑棋获胜", "游戏结束", JOptionPane.WARNING_MESSAGE);
+					userBlack.winner();
+					userWhite.loser();
+				}
+				
+				userBlack.update();
+				userWhite.update();
+				isFinish = Boolean.TRUE;		
+				current = current == WHITE ? BLACK:WHITE;
 				
 				//init_game();
 				return;
@@ -261,7 +313,9 @@ public class stdChessBoard extends ChessBoard {
 			//没有五子连棋，改变当前下棋方
 			current = current == WHITE ? BLACK:WHITE;
 			
-		    repaint();
+			
+		   
+		    userWhite.play();
 		}
 		
 		
@@ -293,7 +347,7 @@ public class stdChessBoard extends ChessBoard {
 		
 	}
 	
-	private Boolean isWinner(int x,int y)
+	public Boolean isWinner(int x,int y)
 	{
 		int count = 1;//棋子连棋数，5--五子连棋
 		
@@ -388,6 +442,8 @@ public class stdChessBoard extends ChessBoard {
 	private void init_game(){
 		grid = new int[ROWS][COLMNS];
 		current = BLACK;
+		isFinish = Boolean.FALSE;
+		result.clear();
 		repaint();
 	}
 	
@@ -411,4 +467,98 @@ public class stdChessBoard extends ChessBoard {
 	{
 		return grid.clone();
 	}
+
+	//回滚操作
+	@Override
+	public void rollback() {
+		// TODO Auto-generated method stub
+		
+		
+		if(!result.empty())
+		{
+			if(isFinish)
+				isFinish = Boolean.FALSE;
+			Point point = result.pop();
+			grid[(int) point.getX()][(int) point.getY()] = Chess.EMPTY.getValue();
+			
+			current = current == BLACK ? WHITE : BLACK;
+			
+			repaint();
+		}
+	}
+
+	//对指定坐标放置（当前即将下棋的）棋子
+	@Override
+	public void setChess(int x, int y) {
+		if(isFinish)
+			return;
+		// TODO Auto-generated method stub
+		if (grid[x][y] == Chess.EMPTY.getValue()) {
+			grid[x][y] = current;
+			
+			result.push(new Point(x, y));
+			
+			//所有格子放满了，平局
+			if(result.size() == ROWS*COLMNS)
+			{
+				JOptionPane.showMessageDialog(null, "平局", "游戏结束", JOptionPane.WARNING_MESSAGE);	
+				
+				isFinish = Boolean.TRUE;
+				userBlack.tier();
+				userWhite.tier();
+				userBlack.update();
+				userWhite.update();
+				
+				current = current == WHITE ? BLACK:WHITE;
+				return ;
+			}
+			
+			
+            if (isWinner(x, y)) {
+				
+				
+				if (current == WHITE) {
+					JOptionPane.showMessageDialog(null, "白棋获胜", "游戏结束", JOptionPane.WARNING_MESSAGE);
+					userWhite.winner();
+					userBlack.loser();
+				}
+				else{
+					JOptionPane.showMessageDialog(null, "黑棋获胜", "游戏结束", JOptionPane.WARNING_MESSAGE);
+					userBlack.winner();
+					userWhite.loser();
+				}
+				
+				userBlack.update();
+				userWhite.update();
+				isFinish = Boolean.TRUE;		
+				current = current == WHITE ? BLACK:WHITE;
+				
+				
+				return;
+			}
+			
+			
+			
+			current = current == BLACK ? WHITE : BLACK;
+		}
+	}
+
+	//可优化为，只返回特定范围内的空格子数组
+	//返回空格子数组
+	@Override
+	public ArrayList<Point> getAvailable() {
+		// TODO Auto-generated method stub
+		ArrayList<Point> availableList= new ArrayList<Point>();
+		for(int i=0; i<COLMNS; i++)
+			for(int j=0; j<ROWS; j++)
+			{
+				if(grid[i][j] == Chess.EMPTY.getValue())
+					availableList.add(new Point(i, j));
+			}
+		return availableList;
+	}
+
+	
 }
+
+

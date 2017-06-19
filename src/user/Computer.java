@@ -1,16 +1,25 @@
 package user;
 
+
+import java.awt.Point;
+import java.sql.Struct;
 import java.util.ArrayList;
-
-import javax.swing.text.StyledEditorKit.BoldAction;
-
-import org.omg.CORBA.PRIVATE_MEMBER;
 
 import chessboard.Chess;
 import chessboard.ChessBoard;
-
+/**
+ * 计算机类(AI)
+ * 已完成：棋盘评分
+ * 待完善：评分细节，具体看getScore（）函数
+ * @author LolitaC
+ *
+ */
 public class Computer extends User{
 
+	final int MAX = 1000000;
+	final int MIN = -1000000;
+	Chess chess = Chess.WHITE;//本方棋子 （先固定为白棋）
+	
 	public Computer(ChessBoard chessBoard) {
 		super(chessBoard);
 		// TODO Auto-generated constructor stub
@@ -40,32 +49,32 @@ public class Computer extends User{
 		// 456方向进行得分计算
 		int value = Evaluate456(grid, chess);
 		System.out.println("456方向估值：" + value);
-		if(value == -1)
-			return -1;
+		if(value == MAX)
+			return MAX;
 		else
 			score += value;
 		
 		// 258方向进行得分计算
 		value = Evaluate258(grid, chess);
 		System.out.println("258方向估值：" + value);
-		if(value == -1)
-			return -1;
+		if(value == MAX)
+			return MAX;
 		else
 			score += value;
 		
 		// 159方向进行得分计算
 		value = Evaluate159(grid, chess);
 		System.out.println("159方向估值：" + value);
-		if(value == -1)
-			return -1;
+		if(value == MAX)
+			return MAX;
 		else
 			score += value;
 		
 		// 357方向进行得分计算
 		value = Evaluate357(grid, chess);
 		System.out.println("357方向估值：" + value);
-		if(value == -1)
-			return -1;
+		if(value == MAX)
+			return MAX;
 		else
 			score += value;
 		
@@ -114,6 +123,11 @@ public class Computer extends User{
 					//如果当前连子数为空，即该空格不属于跳格或结束标识，可忽略
 					if(count == 0)
 					{
+						if(isJump)
+						{
+							countJump = 0;
+							isJump = Boolean.FALSE;
+						}
 						countDead = 0;
 					}
 					else  //如果还没跳棋，可进行跳棋判断； 否则作为结束标记，
@@ -121,15 +135,15 @@ public class Computer extends User{
 						//进行过跳棋
 						if(isJump)
 						{
-							int value = getScore(count, countDead, isJump);
+							int value = getScore(count, countDead, isJump, countJump);
 							if(value == -1) //游戏结束
 								return -1; 
 							score += value;
 							
-							count = countJump;//连子数
-							countJump = 0;//跳棋数
+							count = 0;//连子数
+							//countJump = 0;//跳棋数
 							countDead = 0; //死棋数
-							isJump = Boolean.FALSE; //是否跳棋
+							isJump = Boolean.TRUE; //是否跳棋
 						}
 						else
 						{
@@ -141,6 +155,11 @@ public class Computer extends User{
 				}
 				else if(grid[j][i] == chess.getValue())  //我方棋子
 				{
+					if(count == 0 && isJump)
+					{
+						count = countJump;
+						countJump = 0;
+					}
 					countBorder++; //不是棋盘边缘  或 反方棋子
 					count++; //连棋数增加
 					
@@ -162,7 +181,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead ++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -193,7 +212,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead ++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -249,6 +268,12 @@ public class Computer extends User{
 					//如果当前连子数为空，即该空格不属于跳格或结束标识，可忽略
 					if(count == 0)
 					{
+						if(isJump)
+						{
+							countJump = 0;
+							isJump = Boolean.FALSE;
+						}
+						
 						countDead = 0;
 					}
 					else  //如果还没跳棋，可进行跳棋判断； 否则作为结束标记，
@@ -256,15 +281,16 @@ public class Computer extends User{
 						//进行过跳棋
 						if(isJump)
 						{
-							int value = getScore(count, countDead, isJump);
+							
+							int value = getScore(count, countDead, isJump, countJump);
 							if(value == -1) //游戏结束
 								return -1; 
 							score += value;
 							
-							count = countJump;//连子数
-							countJump = 0;//跳棋数
+							count = 0;//连子数
+							//countJump = 0;//跳棋数
 							countDead = 0; //是否死棋
-							isJump = Boolean.FALSE; //是否跳棋
+							isJump = Boolean.TRUE; //是否跳棋
 						}
 						else
 						{
@@ -276,6 +302,11 @@ public class Computer extends User{
 				}
 				else if(grid[i][j] == chess.getValue())  //我方棋子
 				{
+					if(count == 0 && isJump)
+					{
+						count = countJump;
+						countJump = 0;
+					}
 					countBorder++; //不是棋盘边缘  或 反方棋子
 					count++; //连棋数增加
 					
@@ -298,7 +329,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -328,7 +359,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead ++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -380,11 +411,17 @@ public class Computer extends User{
 				//当前棋子为空
 				if(grid[i][j] == Chess.EMPTY.getValue())
 				{
+					
 					countBorder++; //不是棋盘边缘  或 反方棋子
 					
 					//如果当前连子数为空，即该空格不属于跳格或结束标识，可忽略
 					if(count == 0)
 					{
+						if(isJump)
+						{
+							countJump = 0;
+							isJump = Boolean.FALSE;
+						}
 						countDead = 0;
 					}
 					else  //如果还没跳棋，可进行跳棋判断； 否则作为结束标记，
@@ -392,15 +429,15 @@ public class Computer extends User{
 						//进行过跳棋
 						if(isJump)
 						{
-							int value = getScore(count, countDead, isJump);
+							int value = getScore(count, countDead, isJump, countJump);
 							if(value == -1) //游戏结束
 								return -1; 
 							score += value;
 							
-							count = countJump;//连子数
-							countJump = 0;//跳棋数
+							count = 0;//连子数
+							//countJump = 0;//跳棋数
 							countDead = 0; //是否死棋
-							isJump = Boolean.FALSE; //是否跳棋
+							isJump = Boolean.TRUE; //是否跳棋
 						}
 						else
 						{
@@ -412,6 +449,11 @@ public class Computer extends User{
 				}
 				else if(grid[i][j] == chess.getValue())  //我方棋子
 				{
+					if(count == 0 && isJump)
+					{
+						count = countJump;
+						countJump = 0;
+					}
 					countBorder++; //不是棋盘边缘  或 反方棋子
 					count++; //连棋数增加
 					
@@ -434,7 +476,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -464,7 +506,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead ++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -507,6 +549,11 @@ public class Computer extends User{
 					//如果当前连子数为空，即该空格不属于跳格或结束标识，可忽略
 					if(count == 0)
 					{
+						if(isJump)
+						{
+							countJump = 0;
+							isJump = Boolean.FALSE;
+						}
 						countDead = 0;
 					}
 					else  //如果还没跳棋，可进行跳棋判断； 否则作为结束标记，
@@ -514,15 +561,15 @@ public class Computer extends User{
 						//进行过跳棋
 						if(isJump)
 						{
-							int value = getScore(count, countDead, isJump);
+							int value = getScore(count, countDead, isJump, countJump);
 							if(value == -1) //游戏结束
 								return -1; 
 							score += value;
 							
-							count = countJump;//连子数
-							countJump = 0;//跳棋数
+							count = 0;//连子数
+							//countJump = 0;//跳棋数
 							countDead = 0; //是否死棋
-							isJump = Boolean.FALSE; //是否跳棋
+							isJump = Boolean.TRUE; //是否跳棋
 						}
 						else
 						{
@@ -534,6 +581,11 @@ public class Computer extends User{
 				}
 				else if(grid[i][j] == chess.getValue())  //我方棋子
 				{
+					if(count == 0 && isJump)
+					{
+						count = countJump;
+						countJump = 0;
+					}
 					countBorder++; //不是棋盘边缘  或 反方棋子
 					count++; //连棋数增加
 					
@@ -556,7 +608,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -586,7 +638,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead ++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -642,6 +694,11 @@ public class Computer extends User{
 					//如果当前连子数为空，即该空格不属于跳格或结束标识，可忽略
 					if(count == 0)
 					{
+						if(isJump)
+						{
+							countJump = 0;
+							isJump = Boolean.FALSE;
+						}
 						countDead = 0;
 					}
 					else  //如果还没跳棋，可进行跳棋判断； 否则作为结束标记，
@@ -649,15 +706,15 @@ public class Computer extends User{
 						//进行过跳棋
 						if(isJump)
 						{
-							int value = getScore(count, countDead, isJump);
+							int value = getScore(count, countDead, isJump, countJump);
 							if(value == -1) //游戏结束
 								return -1; 
 							score += value;
 							
-							count = countJump;//连子数
-							countJump = 0;//跳棋数
+							count = 0;//连子数
+							//countJump = 0;//跳棋数
 							countDead = 0; //是否死棋
-							isJump = Boolean.FALSE; //是否跳棋
+							isJump = Boolean.TRUE; //是否跳棋
 						}
 						else
 						{
@@ -669,6 +726,11 @@ public class Computer extends User{
 				}
 				else if(grid[i][j] == chess.getValue())  //我方棋子
 				{
+					if(count == 0 && isJump)
+					{
+						count = countJump;
+						countJump = 0;
+					}
 					countBorder++; //不是棋盘边缘  或 反方棋子
 					count++; //连棋数增加
 					
@@ -691,7 +753,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -721,7 +783,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead ++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -764,6 +826,11 @@ public class Computer extends User{
 					//如果当前连子数为空，即该空格不属于跳格或结束标识，可忽略
 					if(count == 0)
 					{
+						if(isJump)
+						{
+							countJump = 0;
+							isJump = Boolean.FALSE;
+						}
 						countDead = 0;
 					}
 					else  //如果还没跳棋，可进行跳棋判断； 否则作为结束标记，
@@ -771,15 +838,15 @@ public class Computer extends User{
 						//进行过跳棋
 						if(isJump)
 						{
-							int value = getScore(count, countDead, isJump);
+							int value = getScore(count, countDead, isJump, countJump);
 							if(value == -1) //游戏结束
 								return -1; 
 							score += value;
 							
-							count = countJump;//连子数
-							countJump = 0;//跳棋数
+							count = 0;//连子数
+							//countJump = 0;//跳棋数
 							countDead = 0; //是否死棋
-							isJump = Boolean.FALSE; //是否跳棋
+							isJump = Boolean.TRUE; //是否跳棋
 						}
 						else
 						{
@@ -791,6 +858,11 @@ public class Computer extends User{
 				}
 				else if(grid[i][j] == chess.getValue())  //我方棋子
 				{
+					if(count == 0 && isJump)
+					{
+						count = countJump;
+						countJump = 0;
+					}
 					countBorder++; //不是棋盘边缘  或 反方棋子
 					count++; //连棋数增加
 					
@@ -813,7 +885,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump, countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -843,7 +915,7 @@ public class Computer extends User{
 						if(!isJump || countJump != 0)
 							countDead ++;
 						
-						int value = getScore(count, countDead, isJump);
+						int value = getScore(count, countDead, isJump , countJump);
 						if(value == -1) //游戏结束
 							return -1; 
 						score += value;
@@ -860,11 +932,13 @@ public class Computer extends User{
 	
 	/**
 	 * 计分函数，对棋盘的分数判断
+	 * (countDead 死棋数        之后应该优化为   isLeftDead 和 isRightDead  是否左死棋 和 是否右死棋）
 	 * @param count 连棋数
 	 * @param countDead 死棋：即有被堵住的棋子，   当countDead为2时，代表两边都被堵住
 	 * @return 分数
+	 * 
 	 */
-	private int getScore(int count , int countDead , Boolean isJump)
+	private int getScore(int count , int countDead , Boolean isJump , int countJump)
 	{
 		//连棋为0   0分
 		if(count == 0)
@@ -875,13 +949,19 @@ public class Computer extends User{
 		if(count < 5 && !isJump && countDead >= 2 || count < 4 && countDead >= 2)
 			return 0;
 		
+		//如果有跳棋
+		if(countJump >= 5 || count - countJump >= 5)
+			count = 5;
+		
+		
+		
 		/**     计分板（出现一个根据下表加分，五子连棋除外）
 		 * 死一                    1
 		 * 死二/活一          10
 		 * 死三/活二          100
 		 * 死四/活三          1000
 		 * 活四                    10000
-		 * 五子连棋            -1      
+		 * 五子连棋             1000000 
 		 */
 		final int ZERO = 0;
 		final int DEAD_ONE = 1;
@@ -889,11 +969,11 @@ public class Computer extends User{
 		final int DEAD_THREE, LIVE_TWO = 100;
 		final int DEAD_FOUR, LIVE_THREE = 1000;
 		final int LIVE_FOUR = 10000;
-		final int FIVE = -1;
+		final int FIVE = 100000;
 		
 		
 		//大于五，并且是死棋，那么就是死四
-		if(count >= 5 && countDead > 0)
+		if(count >= 5 && countDead > 0 || count >=5 && isJump)
 			count = 4;
 		
 		if(count >= 5)  
@@ -913,7 +993,7 @@ public class Computer extends User{
 			}
 			
 			//判断是否为死棋,   因为死棋跟活棋刚好是10倍的分数差，所以直接除10即可
-			if(countDead > 0 && score!=ZERO)
+			if(countDead > 0 || countJump > 0)
 				score = score/10;
 			
 			
@@ -923,16 +1003,187 @@ public class Computer extends User{
 		}
 	}
 	
-	//博弈树
-	class GameTree {
-		
-		int color; //待下棋子颜色
-		ArrayList<GameTree> childList;//孩子列表
-		private int[][] grid; //当前棋盘
-		
-		public GameTree() {
-			// TODO Auto-generated constructor stub
-		}
-	}
 
+	//point:坐标
+	//metric：估值
+	class PointMetric{
+		Point point;
+		int metric;
+		
+		public PointMetric(Point p , int m) {
+			// TODO Auto-generated constructor stub
+			point = p;
+			metric = m;
+		}
+		
+		public int getX()
+		{
+			return (int) point.getX();
+		}
+		public int getY()
+		{
+			return (int) point.getY();
+		}
+		public int getMetric()
+		{
+			return metric;
+		}
+	};
+	
+	
+
+	//极大 - 极小 搜索算法        
+	/*
+	 * alpha表示了MAX的最坏情况，beta表示了MIN的最坏情况，
+	 * 因此他们的初始值为负无穷和正无穷。在递归的过程中，
+	 * 在轮到MAX的回合，如果极小极大的值比alpha大，则更新alpha；
+	 * 在MIN的回合中，如果极小极大值比beta小，则更新beta。
+	 * 
+	 */
+	//max
+	/**
+	 * [max max下棋]
+	 * @param  depth        [考虑深度]
+	 * @return {[type]}              [description]
+	 */
+	public PointMetric max( int depth, int beta)
+	{
+		//记录优势值，应该下棋的位置
+	    int row = -1;
+	    int column = -1;
+        int alpha = -9999999;
+        
+	    //什么都不下，直接返回当前棋盘评估值
+	    if (depth == 0) {
+	        alpha = Evaluate(chessBoard.getGrid(), Chess.WHITE) - Evaluate(chessBoard.getGrid(), Chess.BLACK);
+	        
+	        return new PointMetric(new Point(row, column), alpha);
+	    }
+	    else{
+	    	//获取每一步可以走的方案
+	        ArrayList<Point> steps = chessBoard.getAvailable();
+	        // console.log('搜索MAX' + steps.length + '个棋局');
+	        if (!steps.isEmpty()) {
+	            //对于每一种走法
+	            for (int i = 0, l = steps.size(); i < l; i++) {
+	                Point step = steps.get(i);
+	                //下棋
+	                
+	                //如果已经赢了，则直接下棋，不再考虑对方下棋
+	                if(chessBoard.isWinner((int)(step.getX()), (int)(step.getY())))
+	                {
+	                	alpha = MAX;
+	                    row = (int)(step.getX());
+	                    column = (int)(step.getY());
+	                    
+	                   
+	                    break;
+	                }
+	                else{
+	                	chessBoard.setChess((int)(step.getX()), (int)(step.getY()));
+	                	//考虑对方depth-1步下棋之后的优势值，如果对方没棋可下了，则返回当前棋盘估值
+	                    PointMetric res = min(depth - 1, alpha);
+	                    
+	                    //退回上一步下棋
+	                    chessBoard.rollback();
+	                    if (res.getMetric() > alpha) {
+	                        //选择最大优势的走法
+	                        alpha = res.getMetric();
+	                        row = (int) step.getX();
+	                        column = (int) step.getY();
+	                    }
+	                    
+	                    //如果人可以获得更好的走法，则AI必然不会选择这一步走法，所以不用再考虑人的其他走法
+	                    if (alpha >= beta) {
+	                        
+	                        break;
+	                    }
+	                    
+	                    
+	                }
+	            }
+	        }
+	        
+	    }
+	    
+	    return new PointMetric(new Point(row, column), alpha);
+	}
+	
+	//min
+	/**
+	 * [max max下棋]
+	 * @param  depth        [考虑深度]
+	 * @return {[type]}              [description]
+	 */
+	public PointMetric min( int depth, int alpha)
+	{
+		//记录优势值，应该下棋的位置
+	    int row = -1;
+	    int column = -1;
+        int beta = 9999999;
+        
+	    //什么都不下，直接返回当前棋盘评估值
+	    if (depth == 0) {
+	        beta = Evaluate(chessBoard.getGrid(), Chess.WHITE) - Evaluate(chessBoard.getGrid(), Chess.BLACK);
+	        
+	        return new PointMetric(new Point(row, column), beta);
+	    }
+	    else{
+	    	//获取每一步可以走的方案
+	        ArrayList<Point> steps = chessBoard.getAvailable();
+	        // console.log('搜索MIN' + steps.length + '个棋局');
+	        if (!steps.isEmpty()) {
+	            //对于每一种走法
+	            for (int i = 0, l = steps.size(); i < l; i++) {
+	                Point step = steps.get(i);
+	                
+	                //如果已经赢了，则直接下棋，不再考虑对方下棋
+	                if(chessBoard.isWinner((int)(step.getX()), (int)(step.getY())))
+	                {
+	                	beta = MIN;
+	                    row = (int)(step.getX());
+	                    column = (int)(step.getY());
+	                    //退回上一步下棋
+	                    
+	                    break;
+	                }
+	                else{
+	                	//下棋
+	                    chessBoard.setChess((int)(step.getX()), (int)(step.getY()));
+	                	//考虑对方depth-1步下棋之后的优势值，如果对方没棋可下了，则返回当前棋盘估值
+	                    PointMetric res = max(depth - 1, beta);
+	                    
+	                    //退回上一步下棋
+	                    chessBoard.rollback();
+	                    if (res.getMetric() < beta ) {
+	                        //选择最大优势的走法
+	                        beta = res.getMetric();
+	                        row = (int) step.getX();
+	                        column = (int) step.getY();
+	                    }
+	                    
+	                    //如果人可以获得更好的走法，则AI必然不会选择这一步走法，所以不用再考虑人的其他走法
+	                    
+	                    if (alpha >= beta) {
+	                        // console.log('MAX节点' + l + '个棋局，剪掉了' + (l - 1 - i) + '个MIN棋局');
+	                        break;
+	                    }
+	                    
+	                }
+	            }
+	        }
+	        
+	    }
+	    
+	    return new PointMetric(new Point(row, column), beta);
+	
+	}
+	
+	
+	public void play()
+	{
+		PointMetric p = max(2, MAX);
+		chessBoard.setChess(p.getX(), p.getY());
+		chessBoard.repaint();
+	}
 }

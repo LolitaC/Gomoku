@@ -17,4 +17,10 @@ public class localUser extends User{
 	public UserType getUserType(){
 		return userType;
 	}
+
+	@Override
+	public void play() {
+		// TODO Auto-generated method stub
+		
+	}
 }
